@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./qr-agent-backend
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./qr-agent-backend/.env
+    restart: always
+
+  frontend:
+    build:
+      context: ./qr-agent-frontend
+    ports:
+      - "8080:80"
+    restart: always

@@ -4,7 +4,7 @@ import { FiUsers, FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi';
 import { FaBuilding } from 'react-icons/fa';
 import OrgTable from '../components/OrgTable';
 import { superadminApi } from '../api/superadminApi';
-import LoadingSpinner from '../../../shared/utils/LoadingSpinner';
+import LoadingSpinner from '../../../shared/utils/LoadingSpinner.jsx';
 import { useNavigate } from 'react-router-dom';
 
 const Organizations = () => {
