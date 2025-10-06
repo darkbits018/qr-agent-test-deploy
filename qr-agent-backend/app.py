@@ -25,27 +25,29 @@ from websockets import register_sockets
 from services.embedding_service import EmbeddingService
 
 
-
 def create_app():
     app = Flask(__name__)
 
-    load_dotenv()
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')  # Load secret key from .env
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=12)
-    app.config['JWT_IDENTITY_CLAIM'] = 'identity'  # Critical for proper handling
-
+    # Load all configurations from the Config object
     app.config.from_object(Config)
-    # Initialize JWTManage
+
+    # Initialize extensions
     jwt = JWTManager(app)
-    # Initialize database
+    # Configure CORS to allow requests from frontend
+    CORS(app, 
+         resources={r"/*": {
+             "origins": ["http://localhost:8080"],
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization"],
+             "supports_credentials": True
+         }},
+         expose_headers=["Content-Type", "Authorization"]
+         )
     db.init_app(app)
     sockets = Sockets(app)
     register_sockets(sockets)
-    # Initialize Flask-Migrate
     migrate = Migrate(app, db)
     Swagger(app)
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:5173"]}})
-
 
     # Register blueprints
     app.register_blueprint(superadmin.bp)
@@ -69,12 +71,11 @@ def create_app():
     return app
 
 
-
-
 if __name__ == '__main__':
     app = create_app()
-    server = pywsgi.WSGIServer(('0.0.0.0', 5000), app, handler_class=WebSocketHandler)
-    print("Server running on ws://localhost:5000")
+    # Use environment variable for port, default to 8001 to match docker-compose
+    port = int(os.environ.get("PORT", 8001))
+    server = pywsgi.WSGIServer(
+        ('0.0.0.0', port), app, handler_class=WebSocketHandler)
+    print(f"Server running on ws://localhost:{port}")
     server.serve_forever()
-
-app = create_app()

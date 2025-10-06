@@ -1,4 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
+import apiClient from '../../customer/api/apiClient';
 
 // const BASE_URL = 'http://localhost:5000//org-admin';
 // const API_URL = 'http://localhost:5000/api/organizations';
@@ -401,9 +402,8 @@ export const orgadminApi = {
   // Add a new staff member
   createStaffMember: async (staffData) => {
     const token = orgadminApi._getToken();
-    const url = 'http://localhost:5000/api/organizations/staff'; // <-- Correct endpoint
     try {
-      const response = await fetch(url, {
+      const response = await apiClient('/staff', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

@@ -1,0 +1,14 @@
+# Exclude common development folders
+node_modules/
+build/
+dist/
+.venv/
+.git/
+
+# Exclude documentation or log files
+docs/
+logs/
+*.log
+
+# Exclude test fixtures or non-essential files
+test/fixtures/

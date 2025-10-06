@@ -1,7 +1,6 @@
-// const BASE_URL = 'http://localhost:5000/api/customer';
-// const API_URL = 'http://localhost:5000/api';
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/customer`;
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
+// Note: The BASE_URL and API_URL constants are no longer needed
+// as the apiClient prepends the base URL from environment variables.
+import apiClient from './apiClient';
 
 export const customerApi = {
   // Get Menu
@@ -13,71 +12,24 @@ export const customerApi = {
       // In a real scenario, you might want to throw an error.
       return customerApi.getMockMenu();
     }
-
-    const response = await fetch(`${BASE_URL}/menu?organization_id=${organizationId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!response.ok) throw new Error((await response.json()).error || 'Failed to fetch menu');
-    return response.json();
+    // We don't need auth for the menu
+    return apiClient(`/api/customer/menu?organization_id=${organizationId}`, { useAuth: false });
   },
 
   // Place Order
   placeOrder: async ({ table_id, organization_id, group_id, member_token }) => {
-    const jwt = localStorage.getItem('jwt');
     const payload = { table_id, organization_id, group_id, member_token };
-    const response = await fetch(`${BASE_URL}/order`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${jwt}`,
-      },
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) throw new Error((await response.json()).error || 'Failed to place order');
-    return response.json();
+    return apiClient('/customer/order', { body: payload });
   },
 
   // Get Order Status
   getOrderStatus: async (orderId) => {
-    const jwt = localStorage.getItem('jwt');
-    let url = `${BASE_URL}/order/${orderId}`;
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-
-    if (jwt) {
-      headers['Authorization'] = `Bearer ${jwt}`;
-      console.log('[OrderStatus] Using JWT:', jwt);
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-    if (!response.ok) {
-      let errorMsg = 'Failed to fetch order status';
-      try {
-        const errorData = await response.clone().json();
-        errorMsg = errorData.error || errorMsg;
-      } catch {
-        errorMsg = response.statusText || errorMsg;
-      }
-      console.error('[OrderStatus] Error:', errorMsg);
-      throw new Error(errorMsg);
-    }
-    const data = await response.json();
-    console.log('[OrderStatus] Response:', data);
-    return data;
+    return apiClient(`/customer/order/${orderId}`);
   },
   // Add Item to Cart
   addItemToCart: async (cartItem) => {
     const orgId = localStorage.getItem('organization_id');
     const tableId = localStorage.getItem('table_id');
-    const groupId = localStorage.getItem('group_id');
-    const memberToken = localStorage.getItem('member_token');
     const customerName = localStorage.getItem('customer_name') || 'Guest';
 
     const payload = {
@@ -85,194 +37,82 @@ export const customerApi = {
       organization_id: Number(orgId),
       menu_item_id: cartItem.id,
       quantity: cartItem.quantity,
-      customer_name: customerName, // Include customer name with each item
+      customer_name: customerName,
     };
+
+    const groupId = localStorage.getItem('group_id');
+    const memberToken = localStorage.getItem('member_token');
 
     if (groupId && memberToken) {
       payload.group_id = Number(groupId);
       payload.member_token = memberToken;
     }
 
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-
-    const jwt = localStorage.getItem('jwt');
-    if (jwt && !(groupId && memberToken)) {
-      headers['Authorization'] = `Bearer ${jwt}`;
-    }
-
-    const response = await fetch(`${BASE_URL}/cart`, {
-      method: 'POST',
-      mode: 'cors',
-      headers,
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) throw new Error((await response.json()).error || 'Failed to add item to cart');
-    return response.json();
+    // Don't use JWT auth if in a group with a member token
+    const useAuth = !(groupId && memberToken);
+    return apiClient('/customer/cart', { body: payload, useAuth });
   },
+
   //view cart
   viewCart: async (isGroupCart = false) => {
     const groupId = localStorage.getItem('group_id');
     const memberToken = localStorage.getItem('member_token');
 
-    let url = `${BASE_URL}/cart`;
-    const headers = {
-      'Content-Type': 'application/json',
-    };
+    let endpoint = '/customer/cart';
 
     // For group cart
     if (isGroupCart && groupId && memberToken) {
-      url += `?group_id=${groupId}&member_token=${memberToken}`;
+      endpoint += `?group_id=${groupId}&member_token=${memberToken}`;
     }
     // For personal cart in group
     else if (groupId && memberToken) {
-      url += `?group_id=${groupId}&member_token=${memberToken}&personal=true`;
-    }
-    // For personal cart (individual)
-    else {
-      const jwt = localStorage.getItem('jwt');
-      if (jwt) {
-        headers['Authorization'] = `Bearer ${jwt}`;
-      }
+      endpoint += `?group_id=${groupId}&member_token=${memberToken}&personal=true`;
     }
 
-    const response = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-      headers,
-    });
-
-    if (!response.ok) throw new Error((await response.json()).error || 'Failed to fetch cart');
-    return response.json();
+    const useAuth = !(groupId && memberToken);
+    return apiClient(endpoint, { useAuth });
   },
 
   // Remove Item from Cart
   removeCartItem: async (itemId) => {
     const groupId = localStorage.getItem('group_id');
     const memberToken = localStorage.getItem('member_token');
-    const jwt = localStorage.getItem('jwt');
-    let url = `${BASE_URL}/cart/${itemId}`;
-    const headers = {
-      'Content-Type': 'application/json',
-    };
+    let endpoint = `/customer/cart/${itemId}`;
 
     // If group member, add group_id and member_token as query params, do NOT send JWT
     if (groupId && memberToken) {
-      url += `?group_id=${groupId}&member_token=${memberToken}`;
-    } else if (jwt) {
-      headers['Authorization'] = `Bearer ${jwt}`;
+      endpoint += `?group_id=${groupId}&member_token=${memberToken}`;
     }
 
-    const response = await fetch(url, {
-      method: 'DELETE',
-      mode: 'cors',
-      headers,
-    });
-
-    if (!response.ok) {
-      let errorMsg = 'Failed to remove item from cart';
-      try {
-        const errorData = await response.clone().json();
-        errorMsg = errorData.error || errorMsg;
-      } catch {
-        errorMsg = response.statusText || errorMsg;
-      }
-      throw new Error(errorMsg);
-    }
-    return response.json();
+    const useAuth = !(groupId && memberToken);
+    return apiClient(endpoint, { method: 'DELETE', useAuth });
   },
 
   // Call Waiter
   callWaiter: async (tableId) => {
-    try {
-      const response = await fetch(`${BASE_URL}/waiter`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('jwt')}`,
-        },
-        body: JSON.stringify({ table_id: tableId }),
-      });
-      if (!response.ok) throw new Error((await response.json()).error || 'Failed to notify waiter');
-      return response.json();
-    } catch (err) {
-      console.error('Error notifying waiter:', err.message);
-      throw err;
-    }
+    return apiClient('/customer/waiter', { body: { table_id: tableId } });
   },
 
   // Create Group
   createGroup: async (tableId, organizationId) => {
-    try {
-      const jwt = localStorage.getItem('jwt');
-      const payload = {
-        table_id: Number(tableId),
-        organization_id: Number(organizationId),
-      };
-      const response = await fetch(`${API_URL}/group/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${jwt}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        let errorMsg = 'Failed to create group';
-        try {
-          const errorData = await response.json();
-          errorMsg = errorData.error || errorMsg;
-        } catch {
-          errorMsg = await response.text();
-        }
-        throw new Error(errorMsg);
-      }
-      return response.json();
-    } catch (err) {
-      console.error('Error creating group:', err.message);
-      throw err;
-    }
+    const payload = {
+      table_id: Number(tableId),
+      organization_id: Number(organizationId),
+    };
+    return apiClient('/group/create', { body: payload });
   },
 
   // Join Group
   joinGroup: async (groupId, name) => {
-    try {
-      const response = await fetch(`${API_URL}/group/join`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          group_id: groupId,
-          name: name,
-        }),
-      });
-      if (!response.ok) throw new Error((await response.json()).error || 'Failed to join group');
-      return response.json();
-    } catch (err) {
-      console.error('Error joining group:', err.message);
-      throw err;
-    }
+    const payload = { group_id: groupId, name: name };
+    // Joining a group does not require prior authentication
+    return apiClient('/group/join', { body: payload, useAuth: false });
   },
 
   // Check Group Status
   checkGroupStatus: async (groupId, memberToken) => {
-    try {
-      const jwt = localStorage.getItem('jwt');
-      const url = `${API_URL}/group/status?group_id=${groupId}&member_token=${memberToken}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
-      });
-      if (!response.ok) throw new Error((await response.json()).error || 'Failed to check group status');
-      return response.json();
-    } catch (err) {
-      console.error('Error checking group status:', err.message);
-      throw err;
-    }
+    const endpoint = `/group/status?group_id=${groupId}&member_token=${memberToken}`;
+    return apiClient(endpoint);
   },
 
   // View Group Cart
@@ -280,35 +120,17 @@ export const customerApi = {
     const groupId = localStorage.getItem('group_id');
     const memberToken = localStorage.getItem('member_token');
     if (!groupId || !memberToken) throw new Error('Not in a group');
-    const url = `${BASE_URL}/cart?group_id=${groupId}&member_token=${memberToken}`;
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    const response = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-      headers,
-    });
-    if (!response.ok) throw new Error((await response.json()).error || 'Failed to fetch group cart');
-    return response.json();
+    const endpoint = `/customer/cart?group_id=${groupId}&member_token=${memberToken}`;
+    return apiClient(endpoint, { useAuth: false });
   },
 
   // View Personal Cart
   viewPersonalCart: async () => {
-    const groupId = localStorage.getItem('group_id');
-    const memberToken = localStorage.getItem('member_token');
+    const groupId = localStorage.getItem('group_id'); // These are still needed for the endpoint string
+    const memberToken = localStorage.getItem('member_token'); // but apiClient handles auth logic
     if (!groupId || !memberToken) throw new Error('Not in a group');
-    const url = `${BASE_URL}/cart?group_id=${groupId}&member_token=${memberToken}&personal=true`;
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    const response = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-      headers,
-    });
-    if (!response.ok) throw new Error((await response.json()).error || 'Failed to fetch personal cart');
-    return response.json();
+    const endpoint = `/customer/cart?group_id=${groupId}&member_token=${memberToken}&personal=true`;
+    return apiClient(endpoint, { useAuth: false });
   },
 
   // Initialize Group
