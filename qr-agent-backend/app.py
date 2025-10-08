@@ -35,12 +35,10 @@ def create_app():
     jwt = JWTManager(app)
     # Configure CORS to allow requests from frontend
     CORS(app, 
-         resources={r"/*": {
-             "origins": ["http://localhost:8080"],
-             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-             "allow_headers": ["Content-Type", "Authorization"],
-             "supports_credentials": True
-         }},
+         origins=["https://qr-frontend.grimmunited.qzz.io", "http://localhost:3000", "http://localhost:5173"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         allow_headers=["Content-Type", "Authorization", "Origin", "Accept", "X-Requested-With"],
+         supports_credentials=True,
          expose_headers=["Content-Type", "Authorization"]
          )
     db.init_app(app)
