@@ -32,7 +32,10 @@ def create_app():
     app.config.from_object(Config)
 
     # Initialize extensions
+    app.config['JWT_IDENTITY_CLAIM'] = 'identity'
     jwt = JWTManager(app)
+
+
     # Configure CORS to allow requests from frontend
     CORS(app, 
          origins=["https://qr-frontend.grimmunited.qzz.io", "http://localhost:3000", "http://localhost:5173"],
