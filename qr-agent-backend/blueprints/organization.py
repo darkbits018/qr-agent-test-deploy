@@ -78,7 +78,7 @@ def create_menu_item():
             file_path = os.path.join(UPLOAD_FOLDER, filename)
             file.save(file_path)
             image_paths.append(file_path)
-        else:
+        elif file and not allowed_file(file.filename):
             return jsonify({"error": "Invalid file type"}), 400
 
     item = MenuItem(
@@ -182,22 +182,25 @@ def manage_menu_item(item_id):
         files = request.files.getlist('images')
 
         item.name = data.get('name', item.name)
-        item.price = data.get('price', item.price)
+        if 'price' in data:
+            item.price = float(data['price'])
         item.category = data.get('category', item.category)
         item.dietary_preference = data.get('dietary_preference', item.dietary_preference)
         item.available_times = data.get('available_times', item.available_times)
-        item.is_available = data.get('is_available', item.is_available)
+        if 'is_available' in data:
+            item.is_available = data['is_available'].lower() == 'true'
 
         image_paths = []
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
         for file in files[:4]:  # Limit to 4 images
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(file_path)
-                image_paths.append(file_path)
-            else:
-                return jsonify({"error": "Invalid file type"}), 400
+            if file and file.filename:
+                if allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    file_path = os.path.join(UPLOAD_FOLDER, filename)
+                    file.save(file_path)
+                    image_paths.append(file_path)
+                else:
+                    return jsonify({"error": "Invalid file type"}), 400
         
         if len(image_paths) > 0:
             item.image1 = image_paths[0]
