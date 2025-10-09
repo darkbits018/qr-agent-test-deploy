@@ -178,12 +178,36 @@ def manage_menu_item(item_id):
     item = MenuItem.query.filter_by(id=item_id, organization_id=org_id).first_or_404()
 
     if request.method == 'PUT':
-        item.name = request.json.get('name', item.name)
-        item.price = request.json.get('price', item.price)
-        item.category = request.json.get('category', item.category)
-        item.dietary_preference = request.json.get('dietary_preference', item.dietary_preference)
-        item.available_times = request.json.get('available_times', item.available_times)
-        item.is_available = request.json.get('is_available', item.is_available)
+        data = request.form
+        files = request.files.getlist('images')
+
+        item.name = data.get('name', item.name)
+        item.price = data.get('price', item.price)
+        item.category = data.get('category', item.category)
+        item.dietary_preference = data.get('dietary_preference', item.dietary_preference)
+        item.available_times = data.get('available_times', item.available_times)
+        item.is_available = data.get('is_available', item.is_available)
+
+        image_paths = []
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        for file in files[:4]:  # Limit to 4 images
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(file_path)
+                image_paths.append(file_path)
+            else:
+                return jsonify({"error": "Invalid file type"}), 400
+        
+        if len(image_paths) > 0:
+            item.image1 = image_paths[0]
+        if len(image_paths) > 1:
+            item.image2 = image_paths[1]
+        if len(image_paths) > 2:
+            item.image3 = image_paths[2]
+        if len(image_paths) > 3:
+            item.image4 = image_paths[3]
+
         db.session.commit()
         embedding_service.build_index_for_organization(org_id)  # Refresh index
         return jsonify(MenuItemSchema().dump(item)), 200
