@@ -179,22 +179,40 @@ export const orgadminApi = {
   },
 
   // Update a menu item
-  updateMenuItem: async (id, item) => {
+  updateMenuItem: async (id, item, imageFiles = []) => {
     const token = orgadminApi._getToken();
-    const response = await fetch(`${API_URL}/menu/items/${id}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(item),
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to update menu item.');
+    const formData = new FormData();
+
+    // Append all non-file fields from the item object
+    for (const key in item) {
+      if (Object.prototype.hasOwnProperty.call(item, key) && item[key] !== null && item[key] !== undefined) {
+        formData.append(key, item[key]);
+      }
     }
-    return response.json();
+
+    // Append new image files
+    imageFiles.forEach(file => {
+      formData.append('images', file);
+    });
+
+    try {
+      const response = await fetch(`${API_URL}/menu/items/${id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Do NOT set 'Content-Type'; browser handles it for FormData
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update menu item.');
+      }
+      return response.json();
+    } catch (error) {
+      throw error;
+    }
   },
 
   // Delete a menu item
@@ -423,4 +441,3 @@ export const orgadminApi = {
     }
   },
 };
-
