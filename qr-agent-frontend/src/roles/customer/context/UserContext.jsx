@@ -16,7 +16,9 @@ export function UserProvider({ children }) {
     // Add any other group properties your components might need
   });
 
-    const [organizationId, setOrganizationId] = useState(1);
+  // Use a default from environment variables for development, fallback to 1
+  const [organizationId, setOrganizationId] = useState(
+    import.meta.env.VITE_DEFAULT_DEV_ORG_ID || 8);
   const [verificationStatus, setVerificationStatus] = useState('success');
 
   // Mock functions to avoid errors
