@@ -192,7 +192,7 @@ def manage_menu_item(item_id):
             'available_times', item.available_times)
         if 'is_available' in data:
             item.is_available = data['is_available'].lower() == 'true'
-        
+
         # Add logic to handle 'img_url' from the form data
         if 'img_url' in data:
             item.image_url = data.get('img_url')
@@ -449,7 +449,7 @@ def bulk_create_tables():
 
     for table in tables:
         table.qr_code_url = generate_qr_code(
-            f"http://localhost:5173/customer/welcome?org_id={org_id}&table_id={table.id}"
+            f"http://localhost:5173/customer/order-mode?org_id={org_id}&table_id={table.id}"
         )
     db.session.commit()
 
@@ -562,7 +562,7 @@ def add_tables():
 
     for table in tables:
         table.qr_code_url = generate_qr_code(
-            f"https://localhost:5173/customer/welcome?org_id={org_id}&table_id={table.id}"
+            f"http://localhost:5173/customer/order-mode?org_id={org_id}&table_id={table.id}"
         )
     db.session.commit()
 
