@@ -18,7 +18,7 @@ const RoleSelectionPage = () => {
         navigate('/kitchen/dashboard');
         break;
       case 'customer':
-        navigate('/customer/welcome');
+        navigate('/customer/order-mode');
         break;
       default:
         console.error('Invalid role selected');
