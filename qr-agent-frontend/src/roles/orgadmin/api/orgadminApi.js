@@ -100,8 +100,16 @@ export const orgadminApi = {
       }
 
       const data = await response.json();
-      console.log('✅ Menu items retrieved:', data);
-      return data;
+      // Sanitize data to prevent crashes on the frontend from null values
+      const sanitizedData = data.map(item => ({
+        ...item,
+        name: item.name || '',
+        category: item.category || '',
+        dietary_preference: item.dietary_preference || '',
+      }));
+
+      console.log('✅ Menu items retrieved and sanitized:', sanitizedData);
+      return sanitizedData;
     } catch (error) {
       console.error('🔥 Error in getMenuItems:', error.message);
       throw error;

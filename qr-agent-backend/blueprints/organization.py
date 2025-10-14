@@ -175,7 +175,8 @@ def manage_menu_item(item_id):
         description: Menu item not found
     """
     org_id = get_jwt_identity()['org_id']
-    item = MenuItem.query.filter_by(id=item_id, organization_id=org_id).first_or_404()
+    item = MenuItem.query.filter_by(
+        id=item_id, organization_id=org_id).first_or_404()
 
     if request.method == 'PUT':
         data = request.form
@@ -185,8 +186,10 @@ def manage_menu_item(item_id):
         if 'price' in data:
             item.price = float(data['price'])
         item.category = data.get('category', item.category)
-        item.dietary_preference = data.get('dietary_preference', item.dietary_preference)
-        item.available_times = data.get('available_times', item.available_times)
+        item.dietary_preference = data.get(
+            'dietary_preference', item.dietary_preference)
+        item.available_times = data.get(
+            'available_times', item.available_times)
         if 'is_available' in data:
             item.is_available = data['is_available'].lower() == 'true'
 
@@ -201,21 +204,27 @@ def manage_menu_item(item_id):
                     image_paths.append(file_path)
                 else:
                     return jsonify({"error": "Invalid file type"}), 400
-        
-        if len(image_paths) > 0:
-            item.image1 = image_paths[0]
-        if len(image_paths) > 1:
-            item.image2 = image_paths[1]
-        if len(image_paths) > 2:
-            item.image3 = image_paths[2]
-        if len(image_paths) > 3:
-            item.image4 = image_paths[3]
+
+        # If new images were uploaded, update the image fields.
+        # This logic prevents old image paths sent in the form body from causing issues
+        # and correctly handles replacing or adding new images.
+        if files and any(f.filename for f in files):
+            item.image1 = image_paths[0] if len(
+                image_paths) > 0 else item.image1
+            item.image2 = image_paths[1] if len(
+                image_paths) > 1 else item.image2
+            item.image3 = image_paths[2] if len(
+                image_paths) > 2 else item.image3
+            item.image4 = image_paths[3] if len(
+                image_paths) > 3 else item.image4
 
         db.session.commit()
         embedding_service.build_index_for_organization(org_id)  # Refresh index
         return jsonify(MenuItemSchema().dump(item)), 200
 
     elif request.method == 'DELETE':
+        # Note: This doesn't delete the image files from the server.
+        # Consider adding logic to remove files from UPLOAD_FOLDER if needed.
         db.session.delete(item)
         db.session.commit()
         embedding_service.build_index_for_organization(org_id)  # Refresh index
@@ -353,7 +362,8 @@ def bulk_import_items():
                 description=row['description'],
                 price=float(row['price']),
                 category=row['category'],
-                dietary_preference=row['dietary_preference'] if pd.notna(row['dietary_preference']) else None,
+                dietary_preference=row['dietary_preference'] if pd.notna(
+                    row['dietary_preference']) else None,
                 available_times=row['available_times'],
                 is_vegetarian=bool(row['is_vegetarian']),
                 is_available=bool(row['is_available']),
