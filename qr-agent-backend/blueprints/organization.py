@@ -192,6 +192,10 @@ def manage_menu_item(item_id):
             'available_times', item.available_times)
         if 'is_available' in data:
             item.is_available = data['is_available'].lower() == 'true'
+        
+        # Add logic to handle 'img_url' from the form data
+        if 'img_url' in data:
+            item.image_url = data.get('img_url')
 
         image_paths = []
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)

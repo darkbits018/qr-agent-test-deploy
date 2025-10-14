@@ -24,7 +24,8 @@ def validate_table_org(f):
     def decorated(*args, **kwargs):
         data = request.get_json() or {}
         table_id = data.get('table_id') or request.args.get('table_id')
-        organization_id = data.get('organization_id') or request.args.get('organization_id')
+        organization_id = data.get(
+            'organization_id') or request.args.get('organization_id')
 
         if not table_id or not organization_id:
             return jsonify({"error": "Table ID and Organization ID are required"}), 400
@@ -97,7 +98,7 @@ def get_menu():
 
 
 @bp.route('/menu/search', methods=['GET'])
-@jwt_required()
+# @jwt_required() # Temporarily bypassed
 def search_menu_items():
     """
     Search menu items using natural language
@@ -114,10 +115,12 @@ def search_menu_items():
       200:
         description: List of matching menu items
     """
-    identity = get_jwt_identity()
-    org_id = request.args.get("org_id") or identity.get("organization_id")
+    # identity = get_jwt_identity()
+    org_id = request.args.get("org_id")  # identity.get("organization_id")
     query = request.args.get("q")
 
+    if not org_id:
+        return jsonify({"error": "Organization ID ('org_id') is required"}), 400
     if not query:
         return jsonify({"error": "Query parameter 'q' is required"}), 400
 
@@ -333,12 +336,16 @@ def view_cart():
             return jsonify([]), 200
 
         if personal:
-            cart_items = OrderItem.query.filter_by(order_id=cart_order.id, member_id=member.id).all()
+            cart_items = OrderItem.query.filter_by(
+                order_id=cart_order.id, member_id=member.id).all()
         else:
-            cart_items = OrderItem.query.filter_by(order_id=cart_order.id).all()
+            cart_items = OrderItem.query.filter_by(
+                order_id=cart_order.id).all()
 
-        members = {m.id: m.name for m in GroupMember.query.filter_by(group_id=group_id).all()}
-        total = sum(item.quantity * (item.price_at_order or item.menu_item.price) for item in cart_items)
+        members = {m.id: m.name for m in GroupMember.query.filter_by(
+            group_id=group_id).all()}
+        total = sum(item.quantity * (item.price_at_order or item.menu_item.price)
+                    for item in cart_items)
 
         return jsonify({
             "items": [
@@ -413,7 +420,8 @@ def remove_from_cart(item_id):
     db.session.commit()
 
     if group_id:
-        broadcast_cart_update(group_id, {"action": "remove", "item_id": item_id})
+        broadcast_cart_update(
+            group_id, {"action": "remove", "item_id": item_id})
 
     return jsonify({"message": "Item removed from cart"}), 200
 
@@ -422,11 +430,11 @@ def remove_from_cart(item_id):
 # Order Endpoints
 # ======================
 @bp.route('/order', methods=['POST'])
-@jwt_required()
-@validate_table_org
-def place_order(table):
-    identity = get_jwt_identity()
+# @jwt_required() # Temporarily bypassed
+# @validate_table_org
+def place_order():
     data = request.get_json() or {}
+    # identity = get_jwt_identity()
 
     group_id = data.get('group_id')
     member_token = data.get('member_token')
@@ -434,6 +442,12 @@ def place_order(table):
         return jsonify({"error": "Group ID and member token required"}), 400
 
     # Optionally, verify the member_token belongs to the authenticated user if you have such mapping
+    table_id = data.get('table_id')
+    table = Table.query.get(table_id)
+    if not table:
+        return jsonify({"error": "Table not found"}), 404
+    if table.organization_id != int(data.get('organization_id')):
+        return jsonify({"error": "Table does not belong to the specified organization"}), 400
 
     # Find the group cart
     cart_order = Order.query.filter_by(
@@ -461,7 +475,8 @@ def place_order(table):
     db.session.commit()
     # Get all items and member info BEFORE clearing cart items
     cart_items = OrderItem.query.filter_by(order_id=cart_order.id).all()
-    members = {m.id: m.name for m in GroupMember.query.filter_by(group_id=group_id).all()}
+    members = {m.id: m.name for m in GroupMember.query.filter_by(
+        group_id=group_id).all()}
 
     ordered_items = [
         {
@@ -509,7 +524,7 @@ def place_order(table):
 
 
 @bp.route('/order/<int:order_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required() # Temporarily bypassed
 def get_order_status(order_id):
     """
     Get order status
@@ -517,6 +532,18 @@ def get_order_status(order_id):
     parameters:
       - name: order_id
         in: path
+        required: true
+        type: integer
+      - name: group_id
+        in: query
+        required: true
+        type: integer
+      - name: member_token
+        in: query
+        required: true
+        type: string
+      - name: organization_id
+        in: query
         required: true
         type: integer
     responses:
@@ -527,13 +554,25 @@ def get_order_status(order_id):
       404:
         description: Order not found
     """
-    customer_id = get_jwt_identity()['id']
+    # customer_id = get_jwt_identity()['id']
+    group_id = request.args.get('group_id')
+    member_token = request.args.get('member_token')
+
+    if not group_id or not member_token:
+        return jsonify({"error": "Group ID and member token are required"}), 400
+
+    member = GroupMember.query.filter_by(
+        group_id=group_id, member_token=member_token).first()
+    if not member:
+        return jsonify({"error": "Invalid group membership"}), 403
+
     order = Order.query.get(order_id)
 
     if not order:
         return jsonify({"error": "Order not found"}), 404
 
-    if order.customer_id != customer_id:
+    # if order.customer_id != customer_id:
+    if order.group_id != int(group_id):
         return jsonify({"error": "Not your order"}), 403
 
     return jsonify({
@@ -554,9 +593,9 @@ def get_order_status(order_id):
 # Service Endpoints
 # ======================
 @bp.route('/waiter', methods=['POST'])
-@jwt_required()
-@validate_table_org
-def call_waiter(table):
+# @jwt_required() # Temporarily bypassed
+# @validate_table_org
+def call_waiter():
     """
     Call waiter to table
     ---
@@ -577,7 +616,17 @@ def call_waiter(table):
       200:
         description: Waiter notified
     """
-    message = request.json.get('message', 'Assistance requested')
+    data = request.get_json() or {}
+    table_id = data.get('table_id')
+    organization_id = data.get('organization_id')
+    message = data.get('message', 'Assistance requested')
+
+    if not table_id or not organization_id:
+        return jsonify({"error": "Table ID and Organization ID are required"}), 400
+    table = Table.query.filter_by(
+        id=table_id, organization_id=organization_id).first()
+    if not table:
+        return jsonify({"error": "Table not found or does not belong to this organization"}), 404
 
     # In a real implementation, this would trigger a notification system
     return jsonify({
