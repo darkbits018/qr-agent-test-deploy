@@ -48,6 +48,10 @@ class MenuItemSchema(Schema):
     description = fields.Str()
     price = fields.Float(required=True, validate=validate.Range(min=0))
     image_url = fields.Url()
+    image1 = fields.Str()
+    image2 = fields.Str()
+    image3 = fields.Str()
+    image4 = fields.Str()
     organization_id = fields.Int(required=True)
     category = fields.Str(validate=validate.OneOf(['appetizer', 'main', 'dessert', 'beverage']))
     dietary_preference = fields.Str(validate=validate.OneOf([

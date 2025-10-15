@@ -197,38 +197,49 @@ def manage_menu_item(item_id):
         if 'img_url' in data:
             item.image_url = data.get('img_url')
 
-        image_paths = []
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-        for file in files[:4]:  # Limit to 4 images
-            if file and file.filename:
-                if allowed_file(file.filename):
+        # If new images are uploaded, handle replacement.
+        if files and any(f.filename for f in files):
+            # 1. Delete old image files
+            old_image_paths = [p for p in [item.image1, item.image2, item.image3, item.image4] if p]
+            for old_path in old_image_paths:
+                if os.path.exists(old_path):
+                    try:
+                        os.remove(old_path)
+                    except OSError as e:
+                        print(f"Error deleting old image file {old_path}: {e}")
+
+            # 2. Save new files
+            image_paths = []
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+            for file in files[:4]:
+                if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
                     file_path = os.path.join(UPLOAD_FOLDER, filename)
                     file.save(file_path)
                     image_paths.append(file_path)
-                else:
+                elif file and not allowed_file(file.filename):
                     return jsonify({"error": "Invalid file type"}), 400
-
-        # If new images were uploaded, update the image fields.
-        # This logic prevents old image paths sent in the form body from causing issues
-        # and correctly handles replacing or adding new images.
-        if files and any(f.filename for f in files):
-            item.image1 = image_paths[0] if len(
-                image_paths) > 0 else item.image1
-            item.image2 = image_paths[1] if len(
-                image_paths) > 1 else item.image2
-            item.image3 = image_paths[2] if len(
-                image_paths) > 2 else item.image3
-            item.image4 = image_paths[3] if len(
-                image_paths) > 3 else item.image4
+            
+            # 3. Update database record with new paths
+            item.image1 = image_paths[0] if len(image_paths) > 0 else None
+            item.image2 = image_paths[1] if len(image_paths) > 1 else None
+            item.image3 = image_paths[2] if len(image_paths) > 2 else None
+            item.image4 = image_paths[3] if len(image_paths) > 3 else None
 
         db.session.commit()
         embedding_service.build_index_for_organization(org_id)  # Refresh index
         return jsonify(MenuItemSchema().dump(item)), 200
 
     elif request.method == 'DELETE':
-        # Note: This doesn't delete the image files from the server.
-        # Consider adding logic to remove files from UPLOAD_FOLDER if needed.
+        # Delete associated image files
+        old_image_paths = [p for p in [item.image1, item.image2, item.image3, item.image4] if p]
+        for old_path in old_image_paths:
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except OSError as e:
+                    print(f"Error deleting image file {old_path}: {e}")
+
         db.session.delete(item)
         db.session.commit()
         embedding_service.build_index_for_organization(org_id)  # Refresh index
