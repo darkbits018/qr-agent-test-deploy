@@ -107,7 +107,11 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
       </AnimatePresence>
       {/* Image */}
       <div className="relative h-48 w-full overflow-hidden">
-        {images.length === 1 ? (
+        {images.length === 0 ? (
+          <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-500">No Image Available</span>
+          </div>
+        ) : images.length === 1 ? (
           <motion.img
             initial={{ scale: 1 }}
             animate={isHovered ? { scale: 1.05 } : { scale: 1 }}

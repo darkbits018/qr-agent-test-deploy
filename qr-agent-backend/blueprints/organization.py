@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 
 from models import db, Organization, MenuItem, Table, User
-from schemas import MenuSchema, MenuItemSchema, TableSchema, UserSchema
+from schemas import MenuSchema, MenuItemSchema, TableSchema, UserSchema, OrganizationSchema
 import pandas as pd
 import qrcode
 import os
@@ -715,3 +715,28 @@ def add_staff():
     db.session.commit()
 
     return jsonify(UserSchema().dump(staff)), 201
+
+@bp.route('/', methods=['GET'])
+@jwt_required()
+@admin_required(roles=['org_admin'])
+def get_my_organization():
+    """
+    Get My Organization
+    ---
+    tags:
+      - Organization Management
+    responses:
+      200:
+        description: Organization details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+      403:
+        description: Forbidden
+      404:
+        description: Organization not found
+    """
+    org_id = get_jwt_identity()['org_id']
+    org = Organization.query.get_or_404(org_id)
+    return jsonify(OrganizationSchema().dump(org)), 200

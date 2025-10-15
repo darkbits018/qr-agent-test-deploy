@@ -26,6 +26,10 @@ class OrganizationSchema(Schema):
     admin_password = fields.Str(required=True, validate=validate.Length(min=8))
     admin_role = fields.Str(validate=validate.OneOf(['org_admin']))
     admin = fields.Nested('UserSchema', only=('id', 'email'))
+    image_1 = fields.Str(dump_only=True)
+    image_2 = fields.Str(dump_only=True)
+    image_3 = fields.Str(dump_only=True)
+    image_4 = fields.Str(dump_only=True)
 
 
 # --------------------------

@@ -11,6 +11,10 @@ class Organization(db.Model):
     subscription_plan = db.Column(db.String(50))
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    image_1 = db.Column(db.String(255), nullable=True)
+    image_2 = db.Column(db.String(255), nullable=True)
+    image_3 = db.Column(db.String(255), nullable=True)
+    image_4 = db.Column(db.String(255), nullable=True)
 
     # Relationships
     tables = db.relationship('Table', backref='organization', lazy=True)
