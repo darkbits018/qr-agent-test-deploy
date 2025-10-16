@@ -13,8 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application's code to the working directory
 COPY . .
 
+# Make the entrypoint script executable
+RUN chmod +x entrypoint.sh
+
 # Expose the port the app runs on
 EXPOSE 8001
 
-# Define the command to run the application
-CMD ["gunicorn", "--worker-class", "gevent", "--workers", "3", "--bind", "0.0.0.0:8001", "app:create_app()"]
+# Set the entrypoint script as the command to run
+ENTRYPOINT ["/app/entrypoint.sh"]
