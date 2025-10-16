@@ -134,7 +134,7 @@ export const orgadminApi = {
     });
 
     try {
-      const response = await fetch(`http://localhost:5000/api/organizations/menu/items`, {
+      const response = await fetch(`${VITE_API_BASE_URL}/api/organizations/menu/items`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
