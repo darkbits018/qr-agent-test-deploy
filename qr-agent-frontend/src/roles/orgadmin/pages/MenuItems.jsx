@@ -68,7 +68,7 @@ const MenuItems = () => {
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(item => 
+      result = result.filter(item =>
         item.name.toLowerCase().includes(query) ||
         item.category.toLowerCase().includes(query) ||
         item.dietary_preference.toLowerCase().includes(query)
@@ -89,7 +89,7 @@ const MenuItems = () => {
     }
 
     // Apply price filter
-    result = result.filter(item => 
+    result = result.filter(item =>
       item.price >= priceRange[0] && item.price <= priceRange[1]
     );
 
@@ -105,7 +105,7 @@ const MenuItems = () => {
       };
       if (!payload.name.trim()) return alert('Name is required');
       if (editingId) {
-        await orgadminApi.updateMenuItem(editingId, payload);
+        await orgadminApi.updateMenuItem(editingId, payload, selectedImages);
       } else {
         await orgadminApi.createMenuItem(payload, selectedImages); // Pass images here!
       }
@@ -336,55 +336,55 @@ const MenuItems = () => {
               ))}
             </div>
             {/* Image Upload */}
-              <div className="flex flex-col gap-2">
-                <label className="font-medium text-blue-900">Images (up to 4)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  style={{ display: 'none' }}
-                  id="menu-image-upload"
-                  onChange={e => {
-                    const files = Array.from(e.target.files).slice(0, 4);
-                    setSelectedImages(files);
-                    // If you want to store URLs in newItem.img_url as comma-separated:
-                    setNewItem(prev => ({
-                      ...prev,
-                      img_url: '', // Clear the text input if using uploads
-                    }));
-                  }}
-                />
-                <button
-                  type="button"
-                  className="bg-blue-900 hover:bg-blue-950 text-white font-medium px-4 py-2 rounded-lg transition duration-300"
-                  onClick={() => document.getElementById('menu-image-upload').click()}
-                >
-                  Add Images
-                </button>
-                {/* Preview selected images */}
-                {selectedImages.length > 0 && (
-                  <div className="flex gap-2 mt-2">
-                    {selectedImages.map((file, idx) => (
-                      <div key={idx} className="w-20 h-20 rounded-lg overflow-hidden border border-gray-300 bg-gray-100 flex items-center justify-center">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`preview-${idx}`}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {/* Fallback: manual URL input */}
-                <input
-                  name="img_url"
-                  placeholder="Image URL (optional)"
-                  className="input-field bg-gray-50 text-blue-900 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 mt-2"
-                  value={newItem.img_url}
-                  onChange={handleChange}
-                  disabled={selectedImages.length > 0}
-                />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-blue-900">Images (up to 4)</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+                id="menu-image-upload"
+                onChange={e => {
+                  const files = Array.from(e.target.files).slice(0, 4);
+                  setSelectedImages(files);
+                  // If you want to store URLs in newItem.img_url as comma-separated:
+                  setNewItem(prev => ({
+                    ...prev,
+                    img_url: '', // Clear the text input if using uploads
+                  }));
+                }}
+              />
+              <button
+                type="button"
+                className="bg-blue-900 hover:bg-blue-950 text-white font-medium px-4 py-2 rounded-lg transition duration-300"
+                onClick={() => document.getElementById('menu-image-upload').click()}
+              >
+                Add Images
+              </button>
+              {/* Preview selected images */}
+              {selectedImages.length > 0 && (
+                <div className="flex gap-2 mt-2">
+                  {selectedImages.map((file, idx) => (
+                    <div key={idx} className="w-20 h-20 rounded-lg overflow-hidden border border-gray-300 bg-gray-100 flex items-center justify-center">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`preview-${idx}`}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* Fallback: manual URL input */}
+              <input
+                name="img_url"
+                placeholder="Image URL (optional)"
+                className="input-field bg-gray-50 text-blue-900 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 mt-2"
+                value={newItem.img_url}
+                onChange={handleChange}
+                disabled={selectedImages.length > 0}
+              />
+            </div>
             {/* Availability Checkbox */}
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -467,7 +467,7 @@ const MenuItems = () => {
               </svg>
               Current Menu
             </h3>
-            
+
             {/* Search Box */}
             <div className="relative w-full md:w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -481,7 +481,7 @@ const MenuItems = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            
+
             {/* Filter Toggle Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -494,7 +494,7 @@ const MenuItems = () => {
 
           {/* Filters Panel */}
           {showFilters && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}

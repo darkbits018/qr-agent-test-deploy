@@ -1,10 +1,7 @@
 import { jwtDecode } from 'jwt-decode';
 import apiClient from '../../customer/api/apiClient';
 
-// const BASE_URL = 'http://localhost:5000//org-admin';
-// const API_URL = 'http://localhost:5000/api/organizations';
-
-const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/org-admin`;
+const LOGIN_URL = `${import.meta.env.VITE_API_BASE_URL}/org-admin/login`;
 const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/organizations`;
 
 export const orgadminApi = {
@@ -12,9 +9,9 @@ export const orgadminApi = {
   login: async (credentials) => {
     console.log('🔐 Logging in with credentials:', credentials);
 
-    try {
-      console.log('🌐 Sending login request to:', `${BASE_URL}/login`);
-      const response = await fetch(`${BASE_URL}/login`, {
+    try { // Login often has a different flow, so keeping fetch here is fine.
+      console.log('🌐 Sending login request to:', LOGIN_URL);
+      const response = await fetch(LOGIN_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
@@ -59,47 +56,10 @@ export const orgadminApi = {
     }
   },
 
-  // Internal helper to get token or throw error
-  _getToken: () => {
-    try {
-      let token = localStorage.getItem('orgadmin_token1');
-      if (!token) {
-        token = sessionStorage.getItem('orgadmin_token1');
-      }
-      if (!token) {
-        window.location.href = '/login';
-        throw new Error('Missing authentication. Please log in again.');
-      }
-      return token;
-    } catch (error) {
-      throw new Error('Token retrieval failed. Please log in again.');
-    }
-  },
-
   // Fetch menu items
   getMenuItems: async () => {
-    console.log('📥 Fetching menu items...');
-    const token = orgadminApi._getToken();
-
     try {
-      console.log('🌐 Sending GET request to:', `${API_URL}/menu/items`);
-      const response = await fetch(`${API_URL}/menu/items`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ Failed to fetch menu items. Response status:', response.status);
-        console.error('❌ Failed to fetch menu items. Response data:', errorData);
-        throw new Error(errorData.msg || 'Unable to fetch menu items.');
-      }
-
-      const data = await response.json();
+      const data = await apiClient('/api/organizations/menu/items');
       // Sanitize data to prevent crashes on the frontend from null values
       const sanitizedData = data.map(item => ({
         ...item,
@@ -118,7 +78,6 @@ export const orgadminApi = {
 
   // Create a menu item
   createMenuItem: async (menuItemData, imageFiles = []) => {
-    const token = orgadminApi._getToken();
     const formData = new FormData();
 
     // Append fields
@@ -134,21 +93,11 @@ export const orgadminApi = {
     });
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/organizations/menu/items`, {
+      return await apiClient('/api/organizations/menu/items', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // Do NOT set Content-Type; browser will set it for FormData
-        },
         body: formData,
+        useFormData: true, // Signal to apiClient to not set Content-Type
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create menu item.');
-      }
-
-      return response.json();
     } catch (error) {
       throw error;
     }
@@ -156,45 +105,30 @@ export const orgadminApi = {
 
   // Bulk import menu items
   bulkImportMenuItems: async (file) => {
-    const token = orgadminApi._getToken();
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      console.log('🌐 Sending POST request to:', `${API_URL}/menu/items/bulk`);
-      const response = await fetch(`${API_URL}/menu/items/bulk`, {
+      return await apiClient('/api/organizations/menu/items/bulk', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
+        useFormData: true,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ Failed to bulk import menu items. Response status:', response.status);
-        console.error('❌ Failed to bulk import menu items. Response data:', errorData);
-        throw new Error(errorData.error || 'Failed to bulk import menu items.');
-      }
-
-      const data = await response.json();
-      console.log('✅ Menu items bulk imported:', data);
-      return data;
     } catch (error) {
-      console.error('🔥 Error in bulkImportMenuItems:', error.message);
       throw error;
     }
   },
 
   // Update a menu item
   updateMenuItem: async (id, item, imageFiles = []) => {
-    const token = orgadminApi._getToken();
     const formData = new FormData();
 
     // Append all non-file fields from the item object
     for (const key in item) {
       if (Object.prototype.hasOwnProperty.call(item, key) && item[key] !== null && item[key] !== undefined) {
-        formData.append(key, item[key]);
+        // The backend expects 'is_available' as a string 'true'/'false' from form data
+        const value = key === 'is_available' ? String(item[key]) : item[key];
+        formData.append(key, value);
       }
     }
 
@@ -204,41 +138,21 @@ export const orgadminApi = {
     });
 
     try {
-      const response = await fetch(`${API_URL}/menu/items/${id}`, {
+      return await apiClient(`/api/organizations/menu/items/${id}`, {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // Do NOT set 'Content-Type'; browser handles it for FormData
-        },
         body: formData,
+        useFormData: true,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update menu item.');
-      }
-      return response.json();
     } catch (error) {
       throw error;
     }
   },
 
   // Delete a menu item
-  deleteMenuItem: async (id) => {
-    const token = orgadminApi._getToken();
-    const response = await fetch(`${API_URL}/menu/items/${id}`, {
+  deleteMenuItem: (id) => {
+    return apiClient(`/api/organizations/menu/items/${id}`, {
       method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
     });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to delete menu item.');
-    }
-    return response.json();
   },
 
   // Fetch tables
