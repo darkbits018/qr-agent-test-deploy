@@ -193,10 +193,6 @@ def manage_menu_item(item_id):
         if 'is_available' in data:
             item.is_available = data['is_available'].lower() == 'true'
 
-        # Add logic to handle 'img_url' from the form data
-        if 'img_url' in data:
-            item.image_url = data.get('img_url')
-
         # If new images are uploaded, handle replacement.
         if files and any(f.filename for f in files):
             # 1. Delete old image files
