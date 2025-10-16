@@ -203,6 +203,22 @@ def manage_menu_item(item_id):
         if 'is_available' in data:
             item.is_available = data['is_available'].lower() == 'true'
 
+        # If 'images' key is in the form but is empty, it means clear all images.
+        if 'images' in request.files and not any(f.filename for f in files):
+            # 1. Delete old image files from disk
+            old_image_paths = [p for p in [item.image1, item.image2, item.image3, item.image4] if p]
+            for old_path in old_image_paths:
+                if os.path.exists(old_path):
+                    try:
+                        os.remove(old_path)
+                    except OSError as e:
+                        print(f"Error deleting old image file {old_path}: {e}")
+            # 2. Clear image paths in the database
+            item.image1 = None
+            item.image2 = None
+            item.image3 = None
+            item.image4 = None
+
         # If new images are uploaded, handle replacement.
         if files and any(f.filename for f in files):
             # 1. Delete old image files
