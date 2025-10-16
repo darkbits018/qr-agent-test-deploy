@@ -3,6 +3,9 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+# Wait for the database to be ready
+python wait-for-db.py
+
 # Run database migrations
 flask db upgrade
 
