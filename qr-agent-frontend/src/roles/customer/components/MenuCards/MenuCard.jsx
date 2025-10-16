@@ -58,6 +58,7 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
   const dietaryColor =
     dietaryColors[item.dietary_tag?.toLowerCase()] || 'bg-gray-100 text-gray-800';
 
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   // Collect all available images
   const images = [
     item.image_url,
@@ -65,7 +66,9 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
     item.image2,
     item.image3,
     item.image4
-  ].filter(Boolean); // Remove undefined/null
+  ]
+  .filter(Boolean) // Remove undefined/null
+  .map(img => img.startsWith('http') ? img : `${apiBaseUrl}/${img}`);
 
   return (
     <motion.div

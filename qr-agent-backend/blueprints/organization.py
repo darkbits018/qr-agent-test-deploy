@@ -36,7 +36,7 @@ def create_menu_item():
     requestBody:
       required: true
       content:
-        application/json:
+        multipart/form-data:
           schema:
             type: object
             properties:
@@ -55,6 +55,11 @@ def create_menu_item():
               available_times:
                 type: string
                 example: "all-day"
+              images:
+                type: array
+                items:
+                  type: string
+                  format: binary
     responses:
       201:
         description: Menu item created successfully
@@ -125,7 +130,7 @@ def get_menu_items():
     return jsonify(MenuItemSchema(many=True).dump(items)), 200
 
 
-@bp.route('/menu/items/<int:item_id>', methods=['PUT', 'DELETE'])
+@bp.route('/menu/items/<int:item_id>', methods=['PUT', 'POST', 'DELETE'])
 @jwt_required()
 @admin_required(roles=['org_admin'])
 def manage_menu_item(item_id):
@@ -144,7 +149,7 @@ def manage_menu_item(item_id):
     requestBody:
       required: false
       content:
-        application/json:
+        multipart/form-data:
           schema:
             type: object
             properties:
@@ -166,6 +171,11 @@ def manage_menu_item(item_id):
               is_available:
                 type: boolean
                 example: true
+              images:
+                type: array
+                items:
+                  type: string
+                  format: binary
     responses:
       200:
         description: Menu item updated or deleted successfully
@@ -178,7 +188,7 @@ def manage_menu_item(item_id):
     item = MenuItem.query.filter_by(
         id=item_id, organization_id=org_id).first_or_404()
 
-    if request.method == 'PUT':
+    if request.method == 'PUT' or request.method == 'POST':
         data = request.form
         files = request.files.getlist('images')
 
