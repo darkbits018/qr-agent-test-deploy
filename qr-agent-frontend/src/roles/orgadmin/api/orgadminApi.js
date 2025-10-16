@@ -123,12 +123,19 @@ export const orgadminApi = {
   updateMenuItem: async (id, item, imageFiles = []) => {
     const formData = new FormData();
 
-    // Append all non-file fields from the item object
-    for (const key in item) {
+    // Define the exact fields the backend update endpoint accepts.
+    const allowedFields = ['name', 'price', 'category', 'dietary_preference', 'available_times', 'is_available'];
+
+    // Append only the allowed fields to the FormData.
+    for (const key of allowedFields) {
+      // Check if the item object has the property and it's not null/undefined.
       if (Object.prototype.hasOwnProperty.call(item, key) && item[key] !== null && item[key] !== undefined) {
-        // The backend expects 'is_available' as a string 'true'/'false' from form data
-        const value = key === 'is_available' ? String(item[key]) : item[key];
-        formData.append(key, value);
+        if (key === 'is_available') {
+          // The backend expects 'is_available' as a string 'true'/'false'.
+          formData.append(key, String(item[key]));
+        } else {
+          formData.append(key, item[key]);
+        }
       }
     }
 

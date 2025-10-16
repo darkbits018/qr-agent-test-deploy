@@ -206,7 +206,8 @@ def manage_menu_item(item_id):
         # If new images are uploaded, handle replacement.
         if files and any(f.filename for f in files):
             # 1. Delete old image files
-            old_image_paths = [p for p in [item.image1, item.image2, item.image3, item.image4] if p]
+            old_image_paths = [p for p in [item.image1,
+                                           item.image2, item.image3, item.image4] if p]
             for old_path in old_image_paths:
                 if os.path.exists(old_path):
                     try:
@@ -225,7 +226,7 @@ def manage_menu_item(item_id):
                     image_paths.append(file_path)
                 elif file and not allowed_file(file.filename):
                     return jsonify({"error": "Invalid file type"}), 400
-            
+
             # 3. Update database record with new paths
             item.image1 = image_paths[0] if len(image_paths) > 0 else None
             item.image2 = image_paths[1] if len(image_paths) > 1 else None
@@ -238,7 +239,8 @@ def manage_menu_item(item_id):
 
     elif request.method == 'DELETE':
         # Delete associated image files
-        old_image_paths = [p for p in [item.image1, item.image2, item.image3, item.image4] if p]
+        old_image_paths = [p for p in [item.image1,
+                                       item.image2, item.image3, item.image4] if p]
         for old_path in old_image_paths:
             if os.path.exists(old_path):
                 try:
@@ -732,6 +734,7 @@ def add_staff():
     db.session.commit()
 
     return jsonify(UserSchema().dump(staff)), 201
+
 
 @bp.route('/', methods=['GET'])
 @jwt_required()
