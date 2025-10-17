@@ -115,7 +115,8 @@ cp .env.example .env
 Edit `.env` with your configuration:
 ```env
 VITE_API_BASE_URL=https://---------/api
-VITE_KITCHEN_API_URL=https://-----------/api/kitchen
+VITE_KITCHEN_API_URL=https://---------/api/kitchen
+VITE_STATIC_BASE_URL=https://---------
 VITE_JWT_SECRET=your-jwt-secret-key
 VITE_PAYMENT_GATEWAY_URL=your-payment-gateway-url
 ```
