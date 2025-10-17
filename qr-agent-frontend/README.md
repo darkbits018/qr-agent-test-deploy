@@ -23,7 +23,7 @@ A comprehensive multi-role restaurant management system with QR code integration
 - [Contributing](#contributing)
 - [License](#license)
 
-## Overview
+## Overview..
 
 QR Agent is a modern restaurant management platform that streamlines operations across four distinct user roles: Customers, Kitchen Staff, Organization Admins, and Super Admins. The system provides real-time order management, inventory tracking, QR code-based table management, and comprehensive analytics.
 
