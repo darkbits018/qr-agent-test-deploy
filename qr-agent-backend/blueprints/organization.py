@@ -192,6 +192,7 @@ def manage_menu_item(item_id):
         data = request.form
         files = request.files.getlist('images')
 
+        # Update scalar fields
         item.name = data.get('name', item.name)
         if 'price' in data:
             item.price = float(data['price'])
@@ -203,25 +204,11 @@ def manage_menu_item(item_id):
         if 'is_available' in data:
             item.is_available = data['is_available'].lower() == 'true'
 
-        # If 'images' key is in the form but is empty, it means clear all images.
-        if 'images' in request.files and not any(f.filename for f in files):
-            # 1. Delete old image files from disk
-            old_image_paths = [p for p in [item.image1, item.image2, item.image3, item.image4] if p]
-            for old_path in old_image_paths:
-                if os.path.exists(old_path):
-                    try:
-                        os.remove(old_path)
-                    except OSError as e:
-                        print(f"Error deleting old image file {old_path}: {e}")
-            # 2. Clear image paths in the database
-            item.image1 = None
-            item.image2 = None
-            item.image3 = None
-            item.image4 = None
+        # Always inspect actual files received — do NOT rely on `'images' in request.files`
+        valid_files = [f for f in files if f.filename.strip()]
 
-        # If new images are uploaded, handle replacement.
-        if files and any(f.filename for f in files):
-            # 1. Delete old image files
+        if valid_files:
+            # Replace images: delete old, save new
             old_image_paths = [p for p in [item.image1,
                                            item.image2, item.image3, item.image4] if p]
             for old_path in old_image_paths:
@@ -231,10 +218,9 @@ def manage_menu_item(item_id):
                     except OSError as e:
                         print(f"Error deleting old image file {old_path}: {e}")
 
-            # 2. Save new files
             image_paths = []
             os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            for file in files[:4]:
+            for file in valid_files[:4]:
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
                     file_path = os.path.join(UPLOAD_FOLDER, filename)
@@ -243,14 +229,27 @@ def manage_menu_item(item_id):
                 elif file and not allowed_file(file.filename):
                     return jsonify({"error": "Invalid file type"}), 400
 
-            # 3. Update database record with new paths
             item.image1 = image_paths[0] if len(image_paths) > 0 else None
             item.image2 = image_paths[1] if len(image_paths) > 1 else None
             item.image3 = image_paths[2] if len(image_paths) > 2 else None
             item.image4 = image_paths[3] if len(image_paths) > 3 else None
 
+        elif files:
+            # Files were sent but all have empty filenames → clear images
+            old_image_paths = [p for p in [item.image1,
+                                           item.image2, item.image3, item.image4] if p]
+            for old_path in old_image_paths:
+                if os.path.exists(old_path):
+                    try:
+                        os.remove(old_path)
+                    except OSError as e:
+                        print(f"Error deleting old image file {old_path}: {e}")
+            item.image1 = item.image2 = item.image3 = item.image4 = None
+
+        # If no 'images' field at all, leave images unchanged
+
         db.session.commit()
-        embedding_service.build_index_for_organization(org_id)  # Refresh index
+        embedding_service.build_index_for_organization(org_id)
         return jsonify(MenuItemSchema().dump(item)), 200
 
     elif request.method == 'DELETE':
@@ -263,11 +262,11 @@ def manage_menu_item(item_id):
                     os.remove(old_path)
                 except OSError as e:
                     print(f"Error deleting image file {old_path}: {e}")
-
         db.session.delete(item)
         db.session.commit()
-        embedding_service.build_index_for_organization(org_id)  # Refresh index
+        embedding_service.build_index_for_organization(org_id)
         return jsonify(message="Menu item deleted"), 200
+
     return None
 
 
