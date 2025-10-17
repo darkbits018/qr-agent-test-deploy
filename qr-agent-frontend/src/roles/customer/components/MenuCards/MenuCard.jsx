@@ -1,4 +1,3 @@
-// qr-agent-frontend/src/roles/customer/components/MenuCards/MenuCard.jsx
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Minus } from 'lucide-react';
@@ -10,7 +9,6 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
 
-  // Ensure cartItems is always an array
   if (!Array.isArray(cartItems)) {
     console.error('Invalid cartItems prop:', cartItems);
     cartItems = [];
@@ -50,15 +48,17 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
     vegan: 'bg-blue-100 text-blue-800',
     'gluten-free': 'bg-yellow-100 text-yellow-800',
   };
-
   const dietaryColor =
     dietaryColors[item.dietary_tag?.toLowerCase()] || 'bg-gray-100 text-gray-800';
 
-  // 🔥 FIX: Construct full image URLs from image1–4
+  // ✅ FIX: Get the first valid image from image1–image4
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-  const images = [item.image1, item.image2, item.image3, item.image4]
-    .filter(Boolean)
-    .map(img => img.startsWith('http') ? img : `${apiBaseUrl}/${img.replace(/^\/+/, '')}`);
+  const firstImage = [item.image1, item.image2, item.image3, item.image4].find(img => img);
+  const imageUrl = firstImage
+    ? firstImage.startsWith('http')
+      ? firstImage
+      : `${apiBaseUrl}/${firstImage.replace(/^\/+/, '')}`
+    : null;
 
   return (
     <motion.div
@@ -101,16 +101,12 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
 
       {/* Image */}
       <div className="relative h-48 w-full overflow-hidden">
-        {images.length === 0 ? (
-          <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-500">No Image Available</span>
-          </div>
-        ) : images.length === 1 ? (
+        {imageUrl ? (
           <motion.img
             initial={{ scale: 1 }}
             animate={isHovered ? { scale: 1.05 } : { scale: 1 }}
             transition={{ duration: 0.5 }}
-            src={images[0]}
+            src={imageUrl}
             alt={item.name}
             className="h-full w-full object-cover"
             onError={(e) => {
@@ -118,21 +114,8 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
             }}
           />
         ) : (
-          <div className="flex gap-2 overflow-x-auto h-full">
-            {images.map((img, idx) => (
-              <motion.img
-                key={idx}
-                initial={{ scale: 1 }}
-                animate={isHovered ? { scale: 1.05 } : { scale: 1 }}
-                transition={{ duration: 0.5 }}
-                src={img}
-                alt={`${item.name} ${idx + 1}`}
-                className="h-44 w-44 object-cover rounded"
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/176x176?text=No+Image';
-                }}
-              />
-            ))}
+          <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-500">No Image Available</span>
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -159,7 +142,7 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
           </motion.div>
         </div>
         <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-          {item.description || 'Delicious item description'}
+          {item.description && item.description !== 'NaN' ? item.description : 'Delicious item description'}
         </p>
 
         {/* Custom Controls */}
