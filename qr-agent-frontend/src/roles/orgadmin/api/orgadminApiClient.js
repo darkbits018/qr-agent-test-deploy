@@ -1,16 +1,9 @@
-// qr-agent-frontend/src/roles/orgadmin/api/orgadminApiClient.js
+// src/roles/orgadmin/api/orgadminApiClient.js
 
 const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /**
  * API client specifically for orgadmin that supports FormData (multipart/form-data).
- * 
- * @param {string} endpoint - API endpoint (e.g., '/api/organizations/menu/items/123')
- * @param {Object} options - Fetch options
- * @param {FormData|Object} options.body - Request body
- * @param {boolean} [options.useAuth=true] - Whether to include JWT auth
- * @param {string} [options.method='POST'] - HTTP method
- * @returns {Promise<any>}
  */
 async function orgadminApiClient(endpoint, options = {}) {
     const { body, method = body ? 'POST' : 'GET', useAuth = true, ...customConfig } = options;
