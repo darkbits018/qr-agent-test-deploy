@@ -1,5 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
-import apiClient from '../../customer/api/apiClient';
+import orgadminApiClient from './orgadminApiClient';
 
 const LOGIN_URL = `${import.meta.env.VITE_API_BASE_URL}/org-admin/login`;
 const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/organizations`;
@@ -61,7 +61,7 @@ const orgadminApi = {
   // Fetch menu items
   getMenuItems: async () => {
     try {
-      const data = await apiClient('/api/organizations/menu/items');
+      const data = await orgadminApiClient('/api/organizations/menu/items');
       // Sanitize data to prevent crashes on the frontend from null values
       const sanitizedData = data.map(item => ({
         ...item,
@@ -95,10 +95,10 @@ const orgadminApi = {
     });
 
     try {
-      return await apiClient('/api/organizations/menu/items', {
+      return await orgadminApiClient('/api/organizations/menu/items', {
         method: 'POST',
         body: formData,
-        useFormData: true, // Signal to apiClient to not set Content-Type
+        useFormData: true, // Signal to orgadminApiClient to not set Content-Type
       });
     } catch (error) {
       throw error;
@@ -111,7 +111,7 @@ const orgadminApi = {
     formData.append('file', file);
 
     try {
-      return await apiClient('/api/organizations/menu/items/bulk', {
+      return await orgadminApiClient('/api/organizations/menu/items/bulk', {
         method: 'POST',
         body: formData,
         useFormData: true,
@@ -152,10 +152,9 @@ const orgadminApi = {
     }
 
     try {
-      return await apiClient(`/api/organizations/menu/items/${id}`, {
+      return await orgadminApiClient(`/api/organizations/menu/items/${id}`, {
         method: 'PUT',
         body: formData,
-        useFormData: true,
       });
     } catch (error) {
       throw error;
@@ -164,7 +163,7 @@ const orgadminApi = {
 
   // Delete a menu item
   deleteMenuItem: (id) => {
-    return apiClient(`/api/organizations/menu/items/${id}`, {
+    return orgadminApiClient(`/api/organizations/menu/items/${id}`, {
       method: 'DELETE',
     });
   },
@@ -357,7 +356,7 @@ const orgadminApi = {
   createStaffMember: async (staffData) => {
     const token = orgadminApi._getToken();
     try {
-      const response = await apiClient('/staff', {
+      const response = await orgadminApiClient('/staff', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
