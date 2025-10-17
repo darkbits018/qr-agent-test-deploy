@@ -4,7 +4,9 @@ import apiClient from '../../customer/api/apiClient';
 const LOGIN_URL = `${import.meta.env.VITE_API_BASE_URL}/org-admin/login`;
 const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api/organizations`;
 
-export const orgadminApi = {
+export const BASE_URL = 'https://api.grimmunited.qzz.io'; // Adjust if your backend is on a different port
+
+const orgadminApi = {
   // Login: Authenticate and store JWT
   login: async (credentials) => {
     console.log('🔐 Logging in with credentials:', credentials);

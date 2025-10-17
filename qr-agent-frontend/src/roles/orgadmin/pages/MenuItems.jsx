@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { orgadminApi } from '../api/orgadminApi';
+import { orgadminApi, BASE_URL } from '../api/orgadminApi';
 import { motion } from 'framer-motion';
 import {
   PencilIcon,
@@ -134,10 +134,10 @@ const MenuItems = () => {
 
     // Populate selectedImages with existing image URLs
     const existingImages = [];
-    if (item.image1) existingImages.push({ type: 'url', value: item.image1 });
-    if (item.image2) existingImages.push({ type: 'url', value: item.image2 });
-    if (item.image3) existingImages.push({ type: 'url', value: item.image3 });
-    if (item.image4) existingImages.push({ type: 'url', value: item.image4 });
+    if (item.image1) existingImages.push({ type: 'url', value: `${BASE_URL}/${item.image1}` });
+    if (item.image2) existingImages.push({ type: 'url', value: `${BASE_URL}/${item.image2}` });
+    if (item.image3) existingImages.push({ type: 'url', value: `${BASE_URL}/${item.image3}` });
+    if (item.image4) existingImages.push({ type: 'url', value: `${BASE_URL}/${item.image4}` });
     setSelectedImages(existingImages);
   };
 
