@@ -4,10 +4,9 @@ import { jwtDecode } from 'jwt-decode';
 import orgadminApiClient from './orgadminApiClient';
 
 const LOGIN_URL = `${import.meta.env.VITE_API_BASE_URL}/org-admin/login`;
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
 
 export const orgadminApi = {
-  BASE_URL,
   // Login
   login: async (credentials) => {
     console.log('🔐 Logging in with credentials:', credentials);
