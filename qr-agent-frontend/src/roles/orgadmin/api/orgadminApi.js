@@ -140,14 +140,11 @@ export const orgadminApi = {
     }
 
     // Handle image uploads.
-    // If imageFiles is empty, append an empty value to signal image clearing on the backend.
-    // If there are files, append them.
+    // Only append images if new files are selected.
     if (imageFiles.length > 0) {
       imageFiles.forEach(file => {
         formData.append('images', file);
       });
-    } else {
-      formData.append('images', ''); // This signals to the backend to clear images.
     }
 
     try {
