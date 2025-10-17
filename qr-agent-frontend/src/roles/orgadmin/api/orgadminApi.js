@@ -140,6 +140,8 @@ export const orgadminApi = {
     }
 
     // Handle image uploads.
+    console.log('FormData before sending:', Object.fromEntries(formData.entries()));
+    console.log('Image files being sent:', imageFiles);
     // Only append images if new files are selected.
     if (imageFiles.length > 0) {
       imageFiles.forEach(file => {
