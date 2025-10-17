@@ -20,6 +20,7 @@ const defaultItem = {
   available_times: [],
   is_available: true,
   img_url: '',
+  description: '',
 };
 
 const categories = ['Appetizer', 'Main Course', 'Dessert', 'Beverage', 'Other'];
@@ -105,7 +106,8 @@ const MenuItems = () => {
       };
       if (!payload.name.trim()) return alert('Name is required');
       if (editingId) {
-        await orgadminApi.updateMenuItem(editingId, payload, selectedImages);
+        const filesToUpload = selectedImages.filter(img => img instanceof File);
+        await orgadminApi.updateMenuItem(editingId, payload, filesToUpload);
       } else {
         await orgadminApi.createMenuItem(payload, selectedImages); // Pass images here!
       }
@@ -129,6 +131,14 @@ const MenuItems = () => {
       setNewItem((prev) => ({ ...prev, category: 'Other' }));
       setOtherCategory(item.category);
     }
+
+    // Populate selectedImages with existing image URLs
+    const existingImages = [];
+    if (item.image1) existingImages.push({ type: 'url', value: item.image1 });
+    if (item.image2) existingImages.push({ type: 'url', value: item.image2 });
+    if (item.image3) existingImages.push({ type: 'url', value: item.image3 });
+    if (item.image4) existingImages.push({ type: 'url', value: item.image4 });
+    setSelectedImages(existingImages);
   };
 
   const handleDelete = async (id) => {
@@ -243,6 +253,13 @@ const MenuItems = () => {
                 onChange={handleChange}
               />
             </div>
+            <input
+              name="description"
+              placeholder="Description (optional)"
+              className="input-field bg-gray-50 text-blue-900 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+              value={newItem.description}
+              onChange={handleChange}
+            />
             <select
               name="category"
               value={newItem.category}
@@ -346,7 +363,10 @@ const MenuItems = () => {
                 id="menu-image-upload"
                 onChange={e => {
                   const files = Array.from(e.target.files).slice(0, 4);
-                  setSelectedImages(files);
+                  setSelectedImages(prev => [
+                    ...prev.filter(img => img.type === 'url'), // Keep existing URLs
+                    ...files, // Add new files
+                  ]);
                   // If you want to store URLs in newItem.img_url as comma-separated:
                   setNewItem(prev => ({
                     ...prev,
@@ -366,11 +386,19 @@ const MenuItems = () => {
                 <div className="flex gap-2 mt-2">
                   {selectedImages.map((file, idx) => (
                     <div key={idx} className="w-20 h-20 rounded-lg overflow-hidden border border-gray-300 bg-gray-100 flex items-center justify-center">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt={`preview-${idx}`}
-                        className="object-cover w-full h-full"
-                      />
+                      {file.type === 'url' ? (
+                        <img
+                          src={file.value}
+                          alt={`existing-${idx}`}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`preview-${idx}`}
+                          className="object-cover w-full h-full"
+                        />
+                      )}
                     </div>
                   ))}
                 </div>
