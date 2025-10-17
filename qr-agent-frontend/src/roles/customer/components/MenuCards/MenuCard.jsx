@@ -1,3 +1,4 @@
+// qr-agent-frontend/src/roles/customer/components/MenuCards/MenuCard.jsx
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Minus } from 'lucide-react';
@@ -15,24 +16,20 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
     cartItems = [];
   }
 
-  // Find the cart item corresponding to this menu item
   const cartItem = cartItems.find((cartItem) => cartItem.id === item.id);
   const quantity = cartItem ? cartItem.quantity : 0;
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (timer) clearTimeout(timer);
     };
   }, [timer]);
 
-  // Handle tap events
   const handleTap = () => {
     setTapCount((prev) => prev + 1);
     if (timer) clearTimeout(timer);
     const newTimer = setTimeout(() => {
       if (tapCount === 0) {
-        // Single tap: Add to cart
         onAddToCart(item);
         setIsAdded(true);
         setTimeout(() => setIsAdded(false), 1000);
@@ -41,34 +38,27 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
     }, 300);
     setTimer(newTimer);
     if (tapCount === 1) {
-      // Double tap: Remove from cart
       clearTimeout(newTimer);
       onRemoveFromCart(item.id);
       setTapCount(0);
     }
   };
 
-  // Dietary tag colors
   const dietaryColors = {
     veg: 'bg-green-100 text-green-800',
     'non-veg': 'bg-red-100 text-red-800',
     vegan: 'bg-blue-100 text-blue-800',
     'gluten-free': 'bg-yellow-100 text-yellow-800',
   };
+
   const dietaryColor =
     dietaryColors[item.dietary_tag?.toLowerCase()] || 'bg-gray-100 text-gray-800';
 
+  // 🔥 FIX: Construct full image URLs from image1–4
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-  // Collect all available images
-  const images = [
-    item.image_url,
-    item.image1,
-    item.image2,
-    item.image3,
-    item.image4
-  ]
-  .filter(Boolean) // Remove undefined/null
-  .map(img => img.startsWith('http') ? img : `${apiBaseUrl}/${img}`);
+  const images = [item.image1, item.image2, item.image3, item.image4]
+    .filter(Boolean)
+    .map(img => img.startsWith('http') ? img : `${apiBaseUrl}/${img.replace(/^\/+/, '')}`);
 
   return (
     <motion.div
@@ -77,9 +67,8 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       onClick={handleTap}
-      className={`relative w-72 rounded-2xl overflow-hidden bg-white shadow-lg cursor-pointer transition-all duration-300 ${
-        isHovered ? 'ring-2 ring-purple-300' : ''
-      }`}
+      className={`relative w-72 rounded-2xl overflow-hidden bg-white shadow-lg cursor-pointer transition-all duration-300 ${isHovered ? 'ring-2 ring-purple-300' : ''
+        }`}
     >
       {/* Quantity Indicator */}
       {quantity > 0 && (
@@ -91,6 +80,7 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
           {quantity}
         </motion.div>
       )}
+
       {/* Added Confirmation */}
       <AnimatePresence>
         {isAdded && (
@@ -108,6 +98,7 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
       {/* Image */}
       <div className="relative h-48 w-full overflow-hidden">
         {images.length === 0 ? (
@@ -122,6 +113,9 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
             src={images[0]}
             alt={item.name}
             className="h-full w-full object-cover"
+            onError={(e) => {
+              e.target.src = 'https://via.placeholder.com/288x192?text=No+Image';
+            }}
           />
         ) : (
           <div className="flex gap-2 overflow-x-auto h-full">
@@ -134,6 +128,9 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
                 src={img}
                 alt={`${item.name} ${idx + 1}`}
                 className="h-44 w-44 object-cover rounded"
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/176x176?text=No+Image';
+                }}
               />
             ))}
           </div>
@@ -148,6 +145,7 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
           </span>
         )}
       </div>
+
       {/* Content */}
       <div className="p-4">
         <div className="flex justify-between items-start">
@@ -157,12 +155,13 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
             whileTap={{ scale: 0.9 }}
             className="text-purple-600 font-bold text-lg whitespace-nowrap ml-2"
           >
-            ₹{item.price?.toFixed(2) || 'N/A'}
+            ₹{typeof item.price === 'number' ? item.price.toFixed(2) : 'N/A'}
           </motion.div>
         </div>
         <p className="text-sm text-gray-600 mt-1 line-clamp-2">
           {item.description || 'Delicious item description'}
         </p>
+
         {/* Custom Controls */}
         <motion.div
           initial={{ opacity: 0, height: 0 }}
