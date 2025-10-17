@@ -55,9 +55,11 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
   const firstImage = [item.image1, item.image2, item.image3, item.image4].find(img => img);
   const imageUrl = firstImage
-    ? firstImage.startsWith('http')
-      ? firstImage
-      : `${apiBaseUrl}/${firstImage.replace(/^\/+/, '')}`
+    ? firstImage.startsWith('http') || firstImage.startsWith('/')
+      ? firstImage.startsWith('/')
+        ? `${apiBaseUrl}${firstImage}`  // Handle absolute paths like /static/images/...
+        : firstImage  // Handle full URLs like https://example.com/image.jpg
+      : `${apiBaseUrl}/${firstImage}`  // Handle relative paths like static/images/... (if needed)
     : null;
 
   return (
