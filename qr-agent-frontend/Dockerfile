@@ -19,10 +19,6 @@ COPY . .
 # Pass environment variables to the build command
 RUN VITE_API_BASE_URL=${VITE_API_BASE_URL} VITE_STATIC_BASE_URL=${VITE_STATIC_BASE_URL} npm run build
 
-# Build the application for production
-# Make the build argument available as an environment variable for the build command
-RUN VITE_API_BASE_URL=${VITE_API_BASE_URL} npm run build
-
 # Stage 2: Serve the application with Nginx
 # Stage 2: Serve the static files with Nginx
 FROM nginx:alpine

@@ -5,14 +5,14 @@ import { Plus, Minus } from 'lucide-react';
 const MenuCategorySection = ({ category, items, onAddToCart, onRemoveFromCart, getCartQuantity }) => {
   return (
     <div className="mb-8">
-      <motion.h2 
+      <motion.h2
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         className="text-xl font-bold text-purple-800 mb-4 sticky top-0 bg-white bg-opacity-90 backdrop-blur-sm py-2 z-10"
       >
         {category}
       </motion.h2>
-      
+
       <div className="grid grid-cols-1 gap-4">
         {items.map((item) => {
           const quantity = getCartQuantity(item.id);
@@ -35,29 +35,29 @@ const MenuCategorySection = ({ category, items, onAddToCart, onRemoveFromCart, g
                     <span className="ml-auto font-bold text-purple-700">${item.price.toFixed(2)}</span>
                   </div>
                 </div>
-                
+
                 {item.image && (
                   <div className="ml-4 w-20 h-20 rounded-lg overflow-hidden">
-                    <img 
-                      src={item.image} 
-                      alt={item.name} 
+                    <img
+                      src={item.image}
+                      alt={item.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 )}
               </div>
-              
+
               <div className="mt-3 flex justify-end">
                 {quantity > 0 ? (
                   <div className="flex items-center gap-2 bg-purple-100 rounded-full px-3 py-1">
-                    <button 
+                    <button
                       onClick={() => onRemoveFromCart(item.id)}
                       className="text-purple-700 hover:text-purple-900"
                     >
                       <Minus size={16} />
                     </button>
                     <span className="font-medium text-purple-800">{quantity}</span>
-                    <button 
+                    <button
                       onClick={() => onAddToCart(item)}
                       className="text-purple-700 hover:text-purple-900"
                     >
