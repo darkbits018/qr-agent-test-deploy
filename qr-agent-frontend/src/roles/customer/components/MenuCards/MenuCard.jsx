@@ -17,12 +17,14 @@ const MenuCard = ({ item }) => {
 
   // ✅ FIX: Get the first valid image from image1–image4
   const staticBaseUrl = import.meta.env.VITE_STATIC_BASE_URL || '';
-  const firstImage = [item.image1, item.image2, item.image3, item.image4].find(img => img);
+  // The item object might have an `images` array or individual `image1`, `image2` properties.
+  // This logic finds the first available image path from either source.
+  const imagePaths = item.images && item.images.length > 0 ? item.images : [item.image1, item.image2, item.image3, item.image4];
+  const firstImage = imagePaths.find(img => img);
+
   const imageUrl = firstImage
-    ? firstImage.startsWith('http')
-      ? firstImage
-      : `${staticBaseUrl}/${firstImage.replace(/\\/g, '/')}`
-    : null;
+    ? firstImage.startsWith('http') ? firstImage : `${staticBaseUrl}/${firstImage.replace(/\\/g, '/')}`
+    : 'https://via.placeholder.com/288x192?text=No+Image';
 
   return (
     <motion.div
@@ -35,7 +37,7 @@ const MenuCard = ({ item }) => {
         }`}
     >
       {/* Quantity Indicator */}
-      {quantity > 0 && (
+      {/* {quantity > 0 && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -43,10 +45,10 @@ const MenuCard = ({ item }) => {
         >
           {quantity}
         </motion.div>
-      )}
+      )} */}
 
       {/* Added Confirmation */}
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {isAdded && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -61,27 +63,19 @@ const MenuCard = ({ item }) => {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
 
       {/* Image */}
       <div className="relative h-48 w-full overflow-hidden">
-        {imageUrl ? (
-          <motion.img
-            initial={{ scale: 1 }}
-            animate={isHovered ? { scale: 1.05 } : { scale: 1 }}
-            transition={{ duration: 0.5 }}
-            src={imageUrl}
-            alt={item.name}
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/288x192?text=No+Image';
-            }}
-          />
-        ) : (
-          <div className="h-full w-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-500">No Image Available</span>
-          </div>
-        )}
+        <motion.img
+          initial={{ scale: 1 }}
+          animate={isHovered ? { scale: 1.05 } : { scale: 1 }}
+          transition={{ duration: 0.5 }}
+          src={imageUrl}
+          alt={item.name}
+          className="h-full w-full object-cover"
+          onError={(e) => { e.target.src = 'https://via.placeholder.com/288x192?text=No+Image'; }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         {/* Dietary Tag */}
         {item.dietary_tag && (
