@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ShoppingCart, X, Filter, Search } from 'lucide-react';
+import { ChevronLeft, X, Filter, Search } from 'lucide-react';
 import MenuCarousel from '../components/MenuCards/MenuCarousel';
 import { customerApi } from '../api/customerApi';
-import { useCart } from '../context/CartContext';
-import CartSlideOver from '../components/PaymentPanel/CartSlideOver';
+
 
 const MenuPage = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -13,7 +12,7 @@ const MenuPage = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { cart, addToCart, removeFromCart, toggleCart } = useCart();
+  
 
   const filters = [
     { id: 'all', name: 'All Items' },
@@ -81,13 +80,7 @@ const MenuPage = () => {
     fetchMenu();
   }, []);
 
-  const handleAddToCart = (item) => {
-    addToCart(item);
-  };
 
-  const handleRemoveFromCart = (itemId) => {
-    removeFromCart(itemId);
-  };
 
   if (loading)
     return (
@@ -157,21 +150,7 @@ const MenuPage = () => {
         >
           Premium Menu
         </motion.h1>
-        <div className="relative">
-          <motion.button
-            onClick={toggleCart}
-            className="relative p-2 rounded-full bg-[#4C4C9D] text-white"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ShoppingCart size={20} />
-            {cart.items.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center">
-                {cart.items.reduce((total, item) => total + item.quantity, 0)}
-              </span>
-            )}
-          </motion.button>
-        </div>
+
       </div>
 
       {/* Search Bar */}
@@ -252,9 +231,6 @@ const MenuPage = () => {
               key={category}
               title={category}
               items={items}
-              onAddToCart={handleAddToCart}
-              onRemoveFromCart={handleRemoveFromCart}
-              cartItems={cart.items}
             />
           ))
         ) : (
@@ -280,7 +256,7 @@ const MenuPage = () => {
           </motion.div>
         )}
       </div>
-      <CartSlideOver />
+      
     </motion.div>
   );
 };

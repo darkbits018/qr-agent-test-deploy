@@ -3,44 +3,8 @@ import { motion } from 'framer-motion';
 import { Plus, Minus } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 
-const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
-  const [tapCount, setTapCount] = useState(0);
-  const [timer, setTimer] = useState(null);
+const MenuCard = ({ item }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isAdded, setIsAdded] = useState(false);
-
-  if (!Array.isArray(cartItems)) {
-    console.error('Invalid cartItems prop:', cartItems);
-    cartItems = [];
-  }
-
-  const cartItem = cartItems.find((cartItem) => cartItem.id === item.id);
-  const quantity = cartItem ? cartItem.quantity : 0;
-
-  useEffect(() => {
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [timer]);
-
-  const handleTap = () => {
-    setTapCount((prev) => prev + 1);
-    if (timer) clearTimeout(timer);
-    const newTimer = setTimeout(() => {
-      if (tapCount === 0) {
-        onAddToCart(item);
-        setIsAdded(true);
-        setTimeout(() => setIsAdded(false), 1000);
-      }
-      setTapCount(0);
-    }, 300);
-    setTimer(newTimer);
-    if (tapCount === 1) {
-      clearTimeout(newTimer);
-      onRemoveFromCart(item.id);
-      setTapCount(0);
-    }
-  };
 
   const dietaryColors = {
     veg: 'bg-green-100 text-green-800',
@@ -66,7 +30,7 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
       transition={{ type: 'spring', stiffness: 300 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      onClick={handleTap}
+      // onClick={handleTap}
       className={`relative w-72 rounded-2xl overflow-hidden bg-white shadow-lg cursor-pointer transition-all duration-300 ${isHovered ? 'ring-2 ring-purple-300' : ''
         }`}
     >
@@ -146,7 +110,7 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
         </p>
 
         {/* Custom Controls */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={isHovered ? { opacity: 1, height: 'auto' } : { opacity: 0, height: 0 }}
           className="flex justify-center gap-2 mt-3 overflow-hidden"
@@ -173,7 +137,7 @@ const MenuCard = ({ item, onAddToCart, onRemoveFromCart, cartItems = [] }) => {
           >
             <Plus size={16} />
           </motion.button>
-        </motion.div>
+        </motion.div> */}
       </div>
     </motion.div>
   );
