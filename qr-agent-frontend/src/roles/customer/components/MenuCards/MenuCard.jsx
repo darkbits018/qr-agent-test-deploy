@@ -74,7 +74,12 @@ const MenuCard = ({ item }) => {
           src={imageUrl}
           alt={item.name}
           className="h-full w-full object-cover"
-          onError={(e) => { e.target.src = 'https://via.placeholder.com/288x192?text=No+Image'; }}
+          onError={(e) => {
+            // Prevent infinite loop if the placeholder itself fails to load
+            if (e.target.src !== 'https://via.placeholder.com/288x192?text=No+Image') {
+              e.target.src = 'https://via.placeholder.com/288x192?text=No+Image';
+            }
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         {/* Dietary Tag */}
